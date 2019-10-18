@@ -84,6 +84,7 @@
                 if (document.querySelector(containerName).querySelectorAll("input:checked").length > 0) {
                     updateCurrentFilter(input.name, input.section)
                     if(serverOn){
+                        console.dir(protected.singleton)
                         fetch(url+"/establecimientos/filtrados", {
                             method: 'POST', 
                             body: JSON.stringify(protected.singleton),
@@ -104,6 +105,24 @@
             })
             document.querySelector(containerName).appendChild(box)
         }
+        document.querySelector("#orden").addEventListener("change",e=>{
+            updateCurrentFilter(null, null)
+            if(serverOn){
+                console.dir(protected.singleton)
+                fetch(url+"/establecimientos/filtrados", {
+                    method: 'POST', 
+                    body: JSON.stringify(protected.singleton),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(res => res.json())
+                    .catch(error => console.error('Error:', "Error en filtrado"))
+                    .then(data => {updateBody(data)});
+            }else{
+                alert("Se requiere conexion con backend para el filtrado..")
+            }
+
+        })
     }
 
     //getAll Establecimientos s/filtros a backend
@@ -122,14 +141,20 @@
 
     //Actualiza el Filtro
     function updateCurrentFilter(name, nombreSeccion) {
-        if (protected.singleton[nombreSeccion].includes(name)) {
-            var index = protected.singleton[nombreSeccion].indexOf(name);
-            if (index > -1) {
-                protected.singleton[nombreSeccion].splice(index, 1);
+        if(name && nombreSeccion){
+            if (protected.singleton[nombreSeccion].includes(name)) {
+                var index = protected.singleton[nombreSeccion].indexOf(name)
+                if (index > -1) {
+                    protected.singleton[nombreSeccion].splice(index, 1)
+                }
+            } else {
+                protected.singleton[nombreSeccion].push(name)
             }
-        } else {
-            protected.singleton[nombreSeccion].push(name)
         }
+        
+        let orden = document.querySelector("#orden").value
+        protected.singleton.Orden = orden
+        
     }
 
     function updateBody(data) {
@@ -199,12 +224,14 @@
         let servicios = []
         let menus = []
         let categorias = []
+        let orden = document.querySelector("#orden").value;
         document.querySelector("#filtro_Servicios").querySelectorAll("input").forEach(x => x.checked ? servicios.push(x.name) : undefined);
         document.querySelector("#filtro_Menus").querySelectorAll("input").forEach(x => x.checked ? menu.push(x.name) : undefined);
         document.querySelector("#filtro_Categorias").querySelectorAll("input").forEach(x => x.checked ? categorias.push(x.name) : undefined);
         filtro.Servicios = servicios
         filtro.Menus = menus
         filtro.Categorias = categorias
+        filtro.Orden = orden
         return filtro
     }
 
